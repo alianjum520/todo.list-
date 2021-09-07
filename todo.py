@@ -1,43 +1,60 @@
 import sys
 import os
-
+from datetime import datetime
+import json
 #To add tasks in your list 
-def add_items(list_data):
-    add_value = input("Enter the value you want to add in the list :")
-    list_data.append(add_value)
+def add_items(list_data,task_dict):
+    add_value = input("Enter the task you want to add in the list :")
+    now = datetime.now()
+    time = now.strftime("%d/%m/%Y %H:%M:%S")
+    task_dict['task'] = add_value
+    task_dict['creation_date'] = time 
+    list_data.append(task_dict.copy())
+    print(list_data)
     return list_data
 
 #TO update any certain task from your list 
 def update_items(list_data):
-    update_value = input("which value do you need to update: ")
-    if update_value in list_data:
-        index_value = list_data.index(update_value)
-        new_value = input("Enter the new value: ")
-        list_data[index_value] = new_value
-    else:
-        print("Value not found in the list")
+    update_value = input("which task do you need to update: ")
+    new_value = input("Enter the new task: ")
+    now = datetime.now()
+    time = now.strftime("%d/%m/%Y %H:%M:%S")
+    for i in range(len(list_data)):
+        print(list_data[i])
+        if update_value in list_data[i].values():
+            list_data[i]['task'] = new_value
+            list_data[i]['updated_date'] = time 
+        else:
+            print("Value not found in the list")
     return list_data
 
 #Tp delete a certain task from a list
 def delete_items(list_data):
     delete_value = input("which value do you need to delete: ")
-    if delete_value in list_data:
-        list_data.remove(delete_value)
-    else:
-        print("Value not found in the list")
+    for i in range(len(list_data)):
+        if delete_value in list_data[i].values():
+            list_data[i].clear()
+        else:
+            print("Value not found in the list")
     return list_data
 
 #To mark your tasks 
 def mark_task(list_data):
     for i in range(len(list_data)):
-        variable = input(f"Task: {list_data[i]}  completed yes/no: ")
+        variable = input(f"Task: {list_data[i]}  completed yes/doing/no: ")
         if variable == 'yes':
             print(f'{list_data[i]} \t ☑')
-            list_data[i] = f'{list_data[i]} \t ☑'
-            
+            list_data[i]['Completed'] = 'True ☑'
+            list_data[i]['Doing'] = 'False ☐'
+            list_data[i]['Incomplete'] = 'False ☐'
+        elif variable == 'doing':
+            list_data[i]['Completed'] = 'False ☐'
+            list_data[i]['Doing'] = 'True ☑'
+            list_data[i]['Incomplete'] = 'False ☐'
         else:
-            print(f'{list_data[i]} \t ☐')
-            list_data[i] = f'{list_data[i]} \t ☐'
+            list_data[i]['Completed'] = 'False ☐'
+            list_data[i]['Doing'] = 'False ☐'
+            list_data[i]['Incomplete'] = 'True ☑'
     return list_data
             
 #Print method   
@@ -65,51 +82,53 @@ def system_close():
 
 # This Function is used to mark job complete as in file     
 def mark_job_completed(list_data,name_file):
-    if os.path.exists(f'{name_file}.txt'):
-        old_name = f'{name_file}_incomplete.txt'
-        new_name = f'{name_file}_completed.txt'
+    if os.path.exists(f'{name_file}.json'):
+        old_name = f'{name_file}_incomplete.json'
+        new_name = f'{name_file}_completed.json'
         os.rename(old_name,new_name)
-        text_file = open(f'{name_file}_completed.txt','w+')
-        for element in list_data:
-            text_file.write(element + "\n")
+        text_file = open(f'{name_file}_completed.json','w+')
+        for  i in range(len(list_data)):
+            text_file.write(json.dumps(list_data[i]) + "\n")
         text_file.close()
     else:
-        text_file = open(f'{name_file}_completed.txt','w+')
-        for element in list_data:
-            text_file.write(element + "\n")
+        text_file = open(f'{name_file}_completed.json','w+')
+        for  i in range(len(list_data)):
+            text_file.write(json.dumps(list_data[i]) + "\n")
         text_file.close()
 
 # This Function is used to mark job complete as in file
 def mark_job_incomplete(list_data,name_file):
-    if os.path.exists(f'{name_file}_incomplete.txt'):
-        text_file = open(f'{name_file}_incomplete.txt','r+')
-        for element in list_data:
-            text_file.write(element + "\n")
+    if os.path.exists(f'{name_file}_incomplete.json'):
+        text_file = open(f'{name_file}_incomplete.json','r+')
+        for  i in range(len(list_data)):
+            text_file.write(json.dumps(list_data[i]) + "\n")
         text_file.close()
     else:
-        text_file = open(f'{name_file}_incomplete.txt','w+')
-        for element in list_data:
-            text_file.write(element + "\n")
+        text_file = open(f'{name_file}_incomplete.json','w+')
+        for  i in range(len(list_data)):
+            text_file.write(json.dumps(list_data[i]) + "\n")
         text_file.close()
 
 # The main function for main interperter
 def main():
     file_name = input("Enter the name of the file:")
-    if os.path.exists(f'{file_name}_incomplete.txt'):
+    if os.path.exists(f'{file_name}_incomplete.json'):
+        task = {}
         data = []
-        text_file = open(f'{file_name}_incomplete.txt','r+')
+        text_file = open(f'{file_name}_incomplete.json','r+')
         x = text_file.readlines()
         for element in x:
             data.append(element.rstrip())
         print(data)
         text_file.close()
     else:
+        task = {}
         data = []         
     choice =show_menu() 
     while(choice!='8'):
         if choice > '0' and choice <= '7': 
             if choice == '1':
-                data = add_items(data)
+                data = add_items(data,task)
             elif choice == '2':
                 data = update_items(data)
             elif choice == '3':
